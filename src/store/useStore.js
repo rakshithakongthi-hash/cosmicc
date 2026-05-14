@@ -164,25 +164,8 @@ const useStore = create((set, get) => ({
           });
         }
 
-        // 2. Fetch ReliefWeb Latest Disaster Reports
-        const rwRes = await fetch('https://api.reliefweb.int/v1/reports?appname=disastersense&limit=3&sort[]=date:desc');
-        if (rwRes.ok) {
-          const rwData = await rwRes.json();
-          rwData.data.forEach(report => {
-            if (!seen.has(report.id)) {
-              seen.add(report.id);
-              newPosts.push({
-                id: report.id,
-                text: `ReliefWeb Dispatch: ${report.fields?.title || 'Disaster Report'}`,
-                source: 'ReliefWeb',
-                author: 'Agency Report',
-                timestamp: new Date().toISOString(),
-                is_disaster: true,
-                analyzed: true
-              });
-            }
-          });
-        }
+        // 2. ReliefWeb API has been deprecated (Returns 410 Gone), so we rely on USGS and other working APIs.
+        // If we want more disaster sources, we can integrate GDELT live feed here instead.
 
         if (newPosts.length > 0) {
           set((s) => {

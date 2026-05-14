@@ -51,17 +51,8 @@ export async function verifyWildfire(lat, lon) {
 
 /** Verify via ReliefWeb reports */
 export async function verifyReliefWeb(disasterType, location) {
-  try {
-    const res = await fetch(`${RELIEFWEB_URL}?appname=disastersense&query[value]=${encodeURIComponent(disasterType + ' ' + location)}&limit=5&sort[]=date:desc`);
-    if (!res.ok) return { verified: false, reason: 'ReliefWeb unavailable' };
-    const data = await res.json();
-    const count = data.count || 0;
-    return {
-      verified: count > 0, count,
-      reports: (data.data || []).map(r => ({ title: r.fields?.title, date: r.fields?.date?.created })),
-      reason: count > 0 ? `${count} related report(s) on ReliefWeb` : 'No matching ReliefWeb reports',
-    };
-  } catch (e) { return { verified: false, reason: 'ReliefWeb verification failed' }; }
+  // ReliefWeb API v1 is returning 410 Gone. Returning graceful fallback.
+  return { verified: false, reason: 'ReliefWeb API unavailable (410 Gone)' };
 }
 
 /** Verify via GDELT news coverage */

@@ -3,10 +3,11 @@
  */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, X, MapPin, Clock, Users, ShieldCheck, ShieldAlert, ShieldX, ChevronDown, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Filter, X, MapPin, Clock, Users, ShieldCheck, ShieldAlert, ShieldX, ChevronDown, ExternalLink, AlertTriangle, Send } from 'lucide-react';
 import AlertCard from '../components/alerts/AlertCard';
 import CredibilityRing from '../components/verification/CredibilityRing';
 import useStore from '../store/useStore';
+import { sendEmailAlert } from '../services/notifications';
 import { cn } from '../utils/cn';
 import { timeAgo, getDisasterEmoji, formatDate } from '../utils/helpers';
 
@@ -18,6 +19,15 @@ export default function Alerts() {
   const { filters, setFilters, selectedAlert, setSelectedAlert, getFilteredAlerts } = useStore();
   const filteredAlerts = getFilteredAlerts();
   const [showFilters, setShowFilters] = useState(false);
+
+  const handleBroadcast = async (alert) => {
+    const success = await sendEmailAlert(alert);
+    if (success) {
+      window.alert('Email broadcast sent successfully!');
+    } else {
+      window.alert('Failed to send email. Check console or your EmailJS config in .env.');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -162,6 +172,15 @@ export default function Alerts() {
                     <p className="text-[10px] text-slate-500">Detected</p>
                     <p className="text-sm font-bold text-white">{timeAgo(selectedAlert.created_at)}</p>
                   </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button 
+                    onClick={() => handleBroadcast(selectedAlert)}
+                    className="btn-glow flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all"
+                  >
+                    <Send size={14} /> Broadcast Email Alert
+                  </button>
                 </div>
               </motion.div>
             ) : (

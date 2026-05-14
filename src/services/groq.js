@@ -27,13 +27,22 @@ You must respond ONLY with valid JSON in this exact format:
   "summary": "Brief factual summary of what the post describes",
   "recommended_action": "Specific actionable recommendation for response agencies",
   "affected_population": "Estimated affected people if mentioned",
-  "keywords": ["relevant", "disaster", "keywords"]
+  "keywords": ["relevant", "disaster", "keywords"],
+  "original_language": "Language of the original post (e.g., Spanish, Hindi, English)",
+  "translated_text": "English translation of the post (if already English, just copy it)",
+  "logistics_needed": {
+    "ambulances_estimated": number,
+    "shelters_estimated": number,
+    "rescue_teams": number
+  }
 }
 
 Important guidelines:
 - Only classify as disaster if there is genuine evidence of a real event
 - Be skeptical of exaggerated or sensationalized language
 - Extract precise location information when available
+- Translate the text to English if it is in another language
+- Calculate logistics_needed intelligently based on severity and affected population
 - Set confidence based on specificity and credibility indicators
 - If not a disaster, set is_disaster to false and severity/urgency to "None"`;
 

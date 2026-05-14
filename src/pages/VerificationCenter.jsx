@@ -7,6 +7,7 @@ import { Search, Brain, Loader2, CheckCircle2, XCircle, AlertCircle, Send } from
 import CredibilityRing from '../components/verification/CredibilityRing';
 import { analyzePost } from '../services/groq';
 import { verifyIncident } from '../services/verification';
+import { sendEmailAlert, sendTelegramAlert } from '../services/notifications';
 import useStore from '../store/useStore';
 import { getDisasterEmoji } from '../utils/helpers';
 
@@ -36,6 +37,26 @@ export default function VerificationCenter() {
       setError(err.message || 'Analysis failed. Check your Groq API key.');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleBroadcast = async () => {
+    if (!result || !result.is_disaster) return;
+    const success = await sendEmailAlert(result);
+    if (success) {
+      alert('Email broadcast sent successfully!');
+    } else {
+      alert('Failed to send email. Check console or your EmailJS config in .env.');
+    }
+  };
+
+  const handleTelegramBroadcast = async () => {
+    if (!result || !result.is_disaster) return;
+    const success = await sendTelegramAlert(result);
+    if (success) {
+      alert('Telegram broadcast sent successfully!');
+    } else {
+      alert('Failed to send Telegram alert. Check your Bot Token in .env.');
     }
   };
 
@@ -131,6 +152,39 @@ export default function VerificationCenter() {
                 <p className="text-sm text-slate-300">{result.recommended_action}</p>
               </div>
 
+              {/* Translation (Innovation #4) */}
+              {result.original_language && result.original_language.toLowerCase() !== 'english' && (
+                <div className="p-4 rounded-xl border border-blue-500/20" style={{ background: 'rgba(59,130,246,0.05)' }}>
+                  <p className="text-[11px] text-blue-400 font-medium uppercase mb-1 flex items-center gap-1">
+                    🌍 Translated from {result.original_language}
+                  </p>
+                  <p className="text-sm text-slate-300 italic">"{result.translated_text}"</p>
+                </div>
+              )}
+
+              {/* Automated Logistics AI (Innovation #3) */}
+              {result.logistics_needed && (
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                    🚁 Automated Logistics AI
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="p-3 rounded-lg text-center" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                      <p className="text-[10px] text-slate-400 mb-1">Ambulances</p>
+                      <p className="text-lg font-bold text-red-400">{result.logistics_needed.ambulances_estimated || 0}</p>
+                    </div>
+                    <div className="p-3 rounded-lg text-center" style={{ background: 'rgba(59,130,246,0.1)' }}>
+                      <p className="text-[10px] text-slate-400 mb-1">Shelters</p>
+                      <p className="text-lg font-bold text-blue-400">{result.logistics_needed.shelters_estimated || 0}</p>
+                    </div>
+                    <div className="p-3 rounded-lg text-center" style={{ background: 'rgba(34,197,94,0.1)' }}>
+                      <p className="text-[10px] text-slate-400 mb-1">Rescue Teams</p>
+                      <p className="text-lg font-bold text-green-400">{result.logistics_needed.rescue_teams || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Cross-Verification & Fake News Results */}
               {result.verification && (
                 <div className="mt-4 pt-4 border-t border-slate-800">
@@ -199,6 +253,24 @@ export default function VerificationCenter() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Broadcast Action */}
+          {result.is_disaster && (
+            <div className="mt-4 flex flex-wrap justify-end gap-3">
+              <button 
+                onClick={handleTelegramBroadcast}
+                className="btn-glow flex items-center gap-2 text-sm bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl transition-all"
+              >
+                <Send size={14} /> Telegram Alert
+              </button>
+              <button 
+                onClick={handleBroadcast}
+                className="btn-glow flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all"
+              >
+                <Send size={14} /> Email Alert
+              </button>
             </div>
           )}
         </motion.div>

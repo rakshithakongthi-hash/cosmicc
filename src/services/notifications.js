@@ -2,6 +2,8 @@
  * DisasterSense AI - Notification Service
  * Handles browser push notifications and email alerts.
  */
+import emailjs from '@emailjs/browser';
+
 
 /** Request browser notification permission */
 export async function requestNotificationPermission() {
@@ -23,7 +25,7 @@ export function sendBrowserNotification(title, options = {}) {
 }
 
 /** Send disaster alert notification */
-export function notifyDisasterAlert(alert) {
+export function notifyDisasterAlert(alert, sendEmail = false) {
   const severityEmoji = { Critical: '🔴', High: '🟠', Medium: '🟡', Low: '🟢' };
   const emoji = severityEmoji[alert.severity] || '⚠️';
   sendBrowserNotification(
@@ -35,6 +37,70 @@ export function notifyDisasterAlert(alert) {
       data: { alertId: alert.id, url: `/alerts/${alert.id}` },
     }
   );
+  
+  if (sendEmail || alert.severity === 'Critical' || alert.severity === 'High') {
+    sendEmailAlert(alert);
+  }
+}
+
+/** Send disaster alert email using EmailJS */
+export async function sendEmailAlert(alert) {
+  try {
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceId || serviceId === 'your-emailjs-service-id') {
+      console.warn('EmailJS not configured properly.');
+      return false;
+    }
+
+    const templateParams = {
+      disaster_type: alert.disaster_type || 'Unknown Disaster',
+      severity: alert.severity || 'Unknown',
+      location: alert.location || 'Unknown Location',
+      summary: alert.summary || 'No summary available.',
+      recommended_action: alert.recommended_action || 'Stay safe.',
+      confidence: alert.confidence ? Math.round(alert.confidence * 100) + '%' : 'N/A'
+    };
+
+    const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+    console.log('Email sent successfully!', response.status, response.text);
+    return true;
+  } catch (error) {
+    console.error('Failed to send email alert:', error);
+    return false;
+  }
+}
+
+/** Send Telegram Alert via Bot API (Innovation #6) */
+export async function sendTelegramAlert(alert) {
+  try {
+    const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+    const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId || botToken === 'your-telegram-bot-token') {
+      console.warn('Telegram Webhook not configured.');
+      return false;
+    }
+
+    const message = `🚨 *${alert.severity.toUpperCase()} DISASTER ALERT* 🚨\n\n*Type:* ${alert.disaster_type}\n*Location:* ${alert.location}\n\n*Summary:* ${alert.summary}\n\n*Action:* ${alert.recommended_action}\n\n*Credibility:* ${Math.round((alert.confidence || alert.credibility_score || 0) * 100)}%`;
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to send Telegram alert:', error);
+    return false;
+  }
 }
 
 /** Play alert sound */
@@ -54,4 +120,4 @@ export function playAlertSound() {
   } catch (e) { /* silent fail */ }
 }
 
-export default { requestNotificationPermission, sendBrowserNotification, notifyDisasterAlert, playAlertSound };
+export default { requestNotificationPermission, sendBrowserNotification, notifyDisasterAlert, playAlertSound, sendEmailAlert, sendTelegramAlert };

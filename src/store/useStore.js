@@ -133,6 +133,96 @@ const useStore = create((set, get) => ({
   })),
   clearNotifications: () => set({ notifications: [] }),
 
+  // Live Monitoring with Real Open-Source APIs
+  liveMonitorInterval: null,
+  seenPostIds: new Set(),
+  startLiveMonitoring: () => {
+    if (get().liveMonitorInterval) return;
+    
+    const fetchRealData = async () => {
+      try {
+        const newPosts = [];
+        const seen = get().seenPostIds;
+
+        // 1. Fetch USGS Earthquakes (Past Hour)
+        const usgsRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson');
+        if (usgsRes.ok) {
+          const usgsData = await usgsRes.json();
+          usgsData.features.forEach(quake => {
+            if (!seen.has(quake.id)) {
+              seen.add(quake.id);
+              newPosts.push({
+                id: quake.id,
+                text: `URGENT: Magnitude ${quake.properties.mag} earthquake detected at ${quake.properties.place}.`,
+                source: 'USGS Live',
+                author: 'System Sensor',
+                timestamp: new Date(quake.properties.time).toISOString(),
+                is_disaster: true,
+                analyzed: true
+              });
+            }
+          });
+        }
+
+        // 2. Fetch ReliefWeb Latest Disaster Reports
+        const rwRes = await fetch('https://api.reliefweb.int/v1/reports?appname=disastersense&limit=3&sort[]=date:desc');
+        if (rwRes.ok) {
+          const rwData = await rwRes.json();
+          rwData.data.forEach(report => {
+            if (!seen.has(report.id)) {
+              seen.add(report.id);
+              newPosts.push({
+                id: report.id,
+                text: `ReliefWeb Dispatch: ${report.fields?.title || 'Disaster Report'}`,
+                source: 'ReliefWeb',
+                author: 'Agency Report',
+                timestamp: new Date().toISOString(),
+                is_disaster: true,
+                analyzed: true
+              });
+            }
+          });
+        }
+
+        if (newPosts.length > 0) {
+          set((s) => {
+            const newStats = { 
+              ...s.stats, 
+              posts_analyzed: s.stats.posts_analyzed + newPosts.length,
+              pending_review: s.stats.pending_review + newPosts.length 
+            };
+            
+            return {
+              posts: [...newPosts, ...s.posts].slice(0, 100),
+              stats: newStats,
+              seenPostIds: seen
+            };
+          });
+
+          // Notify user of the latest major incident
+          const latest = newPosts[0];
+          get().addNotification({ 
+            title: 'Real-Time Incident Detected', 
+            message: latest.text.substring(0, 60) + '...', 
+            type: 'warning' 
+          });
+        }
+      } catch (err) {
+        console.error('Live feed error:', err);
+      }
+    };
+
+    // Fetch immediately, then every 30 seconds
+    fetchRealData();
+    const interval = setInterval(fetchRealData, 30000);
+    set({ liveMonitorInterval: interval });
+  },
+  stopLiveMonitoring: () => {
+    const interval = get().liveMonitorInterval;
+    if (interval) clearInterval(interval);
+    set({ liveMonitorInterval: null });
+  },
+
   // Computed / Filtered alerts
   getFilteredAlerts: () => {
     const { alerts, filters } = get();

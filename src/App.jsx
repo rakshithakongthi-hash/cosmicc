@@ -2,8 +2,10 @@
  * DisasterSense AI - App Root
  * Routes and global providers.
  */
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import useStore from './store/useStore';
 import Layout from './components/ui/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -13,6 +15,13 @@ import LiveMap from './pages/LiveMap';
 import Settings from './pages/Settings';
 
 export default function App() {
+  const { startLiveMonitoring, stopLiveMonitoring } = useStore();
+
+  useEffect(() => {
+    startLiveMonitoring();
+    return () => stopLiveMonitoring();
+  }, [startLiveMonitoring, stopLiveMonitoring]);
+
   return (
     <BrowserRouter>
       <Toaster

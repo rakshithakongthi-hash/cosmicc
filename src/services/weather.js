@@ -82,17 +82,51 @@ export async function verifyStormConditions(latitude, longitude) {
 }
 
 /**
+ * Verify wildfire conditions (High temp, low humidity, wind).
+ */
+export async function verifyWildfireConditions(latitude, longitude) {
+  const weather = await getCurrentWeather(latitude, longitude);
+  if (!weather?.current) return { verified: false, reason: 'No weather data available' };
+
+  const { temperature_2m, relative_humidity_2m, wind_speed_10m, precipitation } = weather.current;
+  
+  // Basic Fire Weather indicators: Hot, Dry, Windy, No rain
+  const isHot = temperature_2m > 30;
+  const isDry = relative_humidity_2m < 35;
+  const isWindy = wind_speed_10m > 20;
+  const noRain = precipitation < 1;
+
+  // If it's hot and dry, fire is plausible
+  const fireRisk = (isHot && isDry && noRain) || (isDry && isWindy && noRain);
+
+  return {
+    verified: fireRisk,
+    temperature: temperature_2m,
+    humidity: relative_humidity_2m,
+    wind_speed: wind_speed_10m,
+    reason: fireRisk
+      ? `High fire risk conditions: ${temperature_2m}°C, ${relative_humidity_2m}% humidity, ${wind_speed_10m}km/h winds.`
+      : `Weather does not strongly support active wildfires: ${temperature_2m}°C, ${relative_humidity_2m}% humidity.`,
+    data: weather.current,
+  };
+}
+
+/**
  * General weather verification for any disaster type.
  */
 export async function verifyWeather(disasterType, latitude, longitude) {
   switch (disasterType?.toLowerCase()) {
     case 'flood':
+    case 'landslide':
       return verifyFloodConditions(latitude, longitude);
     case 'cyclone':
     case 'hurricane':
     case 'storm':
     case 'tornado':
       return verifyStormConditions(latitude, longitude);
+    case 'wildfire':
+    case 'fire':
+      return verifyWildfireConditions(latitude, longitude);
     default:
       return { verified: false, reason: `No weather verification available for ${disasterType}` };
   }

@@ -3,6 +3,8 @@
  * Uses Groq API with Llama 3.3 70B for disaster detection, classification, and analysis.
  */
 
+import localNLP from './nlp';
+
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
@@ -66,11 +68,14 @@ Important guidelines:
     if (!content) throw new Error('Empty response from Groq');
     
     const result = JSON.parse(content);
+    const nlpData = localNLP.analyzePostLocal(postText);
+
     return {
       ...result,
       model: MODEL,
       tokens_used: data.usage?.total_tokens || 0,
       analyzed_at: new Date().toISOString(),
+      nlp_metadata: nlpData,
     };
   } catch (error) {
     console.error('Groq analysis error:', error);

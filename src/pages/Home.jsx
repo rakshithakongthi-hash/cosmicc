@@ -7,6 +7,7 @@ import {
   Zap, Shield, MapPin, Activity, ArrowRight, Globe,
   Radio, Brain, BarChart3, AlertTriangle, CheckCircle2, Eye,
 } from 'lucide-react';
+import useStore from '../store/useStore';
 
 const features = [
   { icon: Brain, title: 'AI Detection', desc: 'Llama 3.3 70B analyzes social media posts for real disaster signals', color: '#8b5cf6' },
@@ -17,15 +18,18 @@ const features = [
   { icon: BarChart3, title: 'Analytics', desc: 'Trend analysis, severity breakdown, and response time metrics', color: '#06b6d4' },
 ];
 
-const stats = [
-  { value: '1,284', label: 'Posts Analyzed' },
-  { value: '47', label: 'Alerts Generated' },
-  { value: '94%', label: 'Avg Credibility' },
-  { value: '<5min', label: 'Response Time' },
-];
+// Dynamic stats will be pulled from useStore
 
 export default function Home() {
   const navigate = useNavigate();
+  const { stats: storeStats } = useStore();
+  
+  const stats = [
+    { value: storeStats.posts_analyzed.toLocaleString(), label: 'Posts Analyzed' },
+    { value: storeStats.total_alerts.toString(), label: 'Alerts Generated' },
+    { value: `${Math.round(storeStats.avg_credibility * 100)}%`, label: 'Avg Credibility' },
+    { value: storeStats.response_time_avg, label: 'Response Time' },
+  ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-16 pb-12">

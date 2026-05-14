@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Search, Brain, Loader2, CheckCircle2, XCircle, AlertCircle, Send } from 'lucide-react';
 import CredibilityRing from '../components/verification/CredibilityRing';
 import { analyzePost } from '../services/groq';
+import { verifyIncident } from '../services/verification';
 import useStore from '../store/useStore';
 import { getDisasterEmoji } from '../utils/helpers';
 
@@ -23,6 +24,13 @@ export default function VerificationCenter() {
     setResult(null);
     try {
       const analysis = await analyzePost(inputText, { source: 'Manual Input', timestamp: new Date().toISOString() });
+      
+      let verification = null;
+      if (analysis.is_disaster) {
+        verification = await verifyIncident(analysis);
+        analysis.verification = verification;
+      }
+      
       setResult(analysis);
     } catch (err) {
       setError(err.message || 'Analysis failed. Check your Groq API key.');
@@ -91,8 +99,15 @@ export default function VerificationCenter() {
 
           {result.is_disaster && (
             <>
-              <div className="flex items-center justify-center">
+              <div className="flex flex-col md:flex-row items-center justify-around gap-6 py-4">
                 <CredibilityRing score={result.confidence} label="AI Confidence" />
+                {result.verification && (
+                  <CredibilityRing 
+                    score={result.verification.credibility_score} 
+                    label="Verified Credibility" 
+                    color={result.verification.credibility_score >= 0.8 ? '#22c55e' : result.verification.credibility_score >= 0.5 ? '#eab308' : '#ef4444'} 
+                  />
+                )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
@@ -115,7 +130,76 @@ export default function VerificationCenter() {
                 <p className="text-[11px] text-slate-500 font-medium uppercase mb-1">Recommended Action</p>
                 <p className="text-sm text-slate-300">{result.recommended_action}</p>
               </div>
+
+              {/* Cross-Verification & Fake News Results */}
+              {result.verification && (
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-green-400" /> Cross-Verification & Fake News Filter
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <p className="text-[10px] text-slate-500 mb-1">Weather API</p>
+                      <p className={`text-sm font-bold ${result.verification.weather_verified ? 'text-green-400' : 'text-slate-400'}`}>
+                        {result.verification.weather_verified ? 'Verified' : 'Unverified/N/A'}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <p className="text-[10px] text-slate-500 mb-1">News Coverage (GDELT)</p>
+                      <p className={`text-sm font-bold ${result.verification.official_source_verified ? 'text-green-400' : 'text-slate-400'}`}>
+                        {result.verification.official_source_verified ? 'Verified' : 'None Found'}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <p className="text-[10px] text-slate-500 mb-1">Fake Probability</p>
+                      <p className={`text-sm font-bold ${result.verification.fake_probability > 0.5 ? 'text-red-400' : 'text-green-400'}`}>
+                        {Math.round(result.verification.fake_probability * 100)}%
+                      </p>
+                    </div>
+                  </div>
+                  {result.verification.verification_notes.filter(Boolean).length > 0 && (
+                    <div className="p-3 rounded-lg bg-slate-800/50">
+                      <p className="text-[10px] text-slate-400 uppercase mb-2">Verification Notes</p>
+                      <ul className="list-disc list-inside text-xs text-slate-300 space-y-1">
+                        {result.verification.verification_notes.filter(Boolean).map((note, idx) => (
+                          <li key={idx}>{note}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
+          )}
+
+          {/* Local NLP Metadata */}
+          {result.nlp_metadata && (
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <h4 className="text-xs font-semibold text-slate-400 uppercase mb-3">Local NLP Extraction</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <p className="text-[10px] text-slate-500 mb-1">Sentiment Score</p>
+                  <p className={`text-sm font-bold ${result.nlp_metadata.sentiment.score < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    {result.nlp_metadata.sentiment.score} {result.nlp_metadata.sentiment.isNegative ? '(Negative)' : '(Positive/Neutral)'}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <p className="text-[10px] text-slate-500 mb-1">Extracted Entities (Places)</p>
+                  <p className="text-sm text-slate-300">
+                    {result.nlp_metadata.entities.places.length > 0 ? result.nlp_metadata.entities.places.join(', ') : 'None'}
+                  </p>
+                </div>
+              </div>
+              {result.nlp_metadata.keywords.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {result.nlp_metadata.keywords.map((kw, idx) => (
+                    <span key={idx} className="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-300">
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </motion.div>
       )}

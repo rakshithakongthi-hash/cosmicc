@@ -3,6 +3,7 @@
  * Central state management with demo data for showcasing.
  */
 import { create } from 'zustand';
+import { subscribeToAlerts, fetchAlerts } from '../services/supabase.js';
 
 // ====================================================================
 // Demo Data - Realistic disaster incidents for demonstration
@@ -87,10 +88,29 @@ const DEMO_POSTS = [
   { id: 'post-008', text: 'FAKE NEWS: There is NO tsunami heading to Mumbai. Please stop spreading rumors! Official sources confirm no threat.', source: 'Reddit', author: 'u/factchecker', timestamp: new Date(Date.now() - 16000000).toISOString(), is_disaster: false, analyzed: true },
 ];
 
-const DEMO_STATS = {
-  total_alerts: 47, verified_alerts: 32, pending_review: 11, fake_detected: 4,
-  posts_analyzed: 1284, active_monitors: 6, avg_credibility: 0.82, response_time_avg: '4.2 min',
+const calculateStats = (alerts, posts) => {
+  const total = alerts.length;
+  const verified = alerts.filter(a => a.verification_status === 'Verified').length;
+  const pending = alerts.filter(a => a.verification_status === 'Needs Review' || a.verification_status === 'Pending').length;
+  const fake = alerts.filter(a => a.verification_status === 'Fake').length;
+  
+  const avgCredibility = total > 0 
+    ? alerts.reduce((acc, a) => acc + (a.credibility_score || 0), 0) / total 
+    : 0;
+
+  return {
+    total_alerts: total,
+    verified_alerts: verified,
+    pending_review: pending,
+    fake_detected: fake,
+    posts_analyzed: posts.length,
+    active_monitors: 6,
+    avg_credibility: avgCredibility,
+    response_time_avg: '4.2 min',
+  };
 };
+
+const DEMO_STATS = calculateStats(DEMO_ALERTS, DEMO_POSTS);
 
 const DEMO_TRENDS = [
   { date: 'May 08', floods: 3, earthquakes: 1, wildfires: 2, cyclones: 0, landslides: 1 },
@@ -120,8 +140,11 @@ const useStore = create((set, get) => ({
   darkMode: true,
 
   // Actions
-  setAlerts: (alerts) => set({ alerts }),
-  addAlert: (alert) => set((s) => ({ alerts: [alert, ...s.alerts] })),
+  setAlerts: (alerts) => set((s) => ({ alerts, stats: calculateStats(alerts, s.posts) })),
+  addAlert: (alert) => set((s) => {
+    const updatedAlerts = [alert, ...s.alerts];
+    return { alerts: updatedAlerts, stats: calculateStats(updatedAlerts, s.posts) };
+  }),
   setSelectedAlert: (alert) => set({ selectedAlert: alert }),
   setFilters: (filters) => set((s) => ({ filters: { ...s.filters, ...filters } })),
   setLoading: (isLoading) => set({ isLoading }),
@@ -133,18 +156,64 @@ const useStore = create((set, get) => ({
   })),
   clearNotifications: () => set({ notifications: [] }),
 
-  // Live Monitoring with Real Open-Source APIs
+  // Live Monitoring with Real Open-Source APIs and Supabase
   liveMonitorInterval: null,
+  supabaseChannel: null,
   seenPostIds: new Set(),
   startLiveMonitoring: () => {
-    if (get().liveMonitorInterval) return;
+    if (get().liveMonitorInterval || get().supabaseChannel) return;
     
+    // Fetch initial alerts from Supabase
+    const loadAlerts = async () => {
+      set({ isLoading: true });
+      const { data, error } = await fetchAlerts();
+      if (!error && data && data.length > 0) {
+        set({ alerts: data, stats: calculateStats(data, get().posts) });
+      }
+      set({ isLoading: false });
+    };
+    loadAlerts();
+    
+    // 1. Supabase Real-Time Subscription
+    try {
+      const channel = subscribeToAlerts((payload) => {
+        console.log('Real-time alert change:', payload);
+        const { eventType, new: newAlert, old: oldAlert } = payload;
+        
+        set((s) => {
+          let updatedAlerts = [...s.alerts];
+          
+          if (eventType === 'INSERT') {
+            if (!updatedAlerts.some(a => a.id === newAlert.id)) {
+              updatedAlerts = [newAlert, ...updatedAlerts];
+              get().addNotification({
+                title: 'New Alert Received',
+                message: `${newAlert.disaster_type} at ${newAlert.location}`,
+                type: 'info'
+              });
+            }
+          } else if (eventType === 'UPDATE') {
+            updatedAlerts = updatedAlerts.map(a => a.id === newAlert.id ? newAlert : a);
+          } else if (eventType === 'DELETE') {
+            updatedAlerts = updatedAlerts.filter(a => a.id !== oldAlert.id);
+          }
+          
+          return { alerts: updatedAlerts, stats: calculateStats(updatedAlerts, s.posts) };
+        });
+      });
+      
+      set({ supabaseChannel: channel });
+    } catch (err) {
+      console.error('Supabase subscription error:', err);
+    }
+
+    // 2. Open-Source API Polling (USGS)
     const fetchRealData = async () => {
       try {
         const newPosts = [];
         const seen = get().seenPostIds;
 
-        // 1. Fetch USGS Earthquakes (Past Hour)
+        // Fetch USGS Earthquakes (Past Hour)
         const usgsRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson');
         if (usgsRes.ok) {
           const usgsData = await usgsRes.json();
@@ -164,25 +233,16 @@ const useStore = create((set, get) => ({
           });
         }
 
-        // 2. ReliefWeb API has been deprecated (Returns 410 Gone), so we rely on USGS and other working APIs.
-        // If we want more disaster sources, we can integrate GDELT live feed here instead.
-
         if (newPosts.length > 0) {
           set((s) => {
-            const newStats = { 
-              ...s.stats, 
-              posts_analyzed: s.stats.posts_analyzed + newPosts.length,
-              pending_review: s.stats.pending_review + newPosts.length 
-            };
-            
+            const updatedPosts = [...newPosts, ...s.posts].slice(0, 100);
             return {
-              posts: [...newPosts, ...s.posts].slice(0, 100),
-              stats: newStats,
+              posts: updatedPosts,
+              stats: calculateStats(s.alerts, updatedPosts),
               seenPostIds: seen
             };
           });
 
-          // Notify user of the latest major incident
           const latest = newPosts[0];
           get().addNotification({ 
             title: 'Real-Time Incident Detected', 
@@ -195,7 +255,6 @@ const useStore = create((set, get) => ({
       }
     };
 
-    // Fetch immediately, then every 30 seconds
     fetchRealData();
     const interval = setInterval(fetchRealData, 30000);
     set({ liveMonitorInterval: interval });
@@ -203,7 +262,11 @@ const useStore = create((set, get) => ({
   stopLiveMonitoring: () => {
     const interval = get().liveMonitorInterval;
     if (interval) clearInterval(interval);
-    set({ liveMonitorInterval: null });
+    
+    const channel = get().supabaseChannel;
+    if (channel) channel.unsubscribe();
+    
+    set({ liveMonitorInterval: null, supabaseChannel: null });
   },
 
   // Computed / Filtered alerts

@@ -16,16 +16,16 @@ const statusOptions = ['all', 'Verified', 'Needs Review', 'Likely Fake'];
 const typeOptions = ['all', 'flood', 'earthquake', 'wildfire', 'cyclone', 'landslide'];
 
 export default function Alerts() {
-  const { filters, setFilters, selectedAlert, setSelectedAlert, getFilteredAlerts } = useStore();
+  const { filters, setFilters, selectedAlert, setSelectedAlert, getFilteredAlerts, addNotification } = useStore();
   const filteredAlerts = getFilteredAlerts();
   const [showFilters, setShowFilters] = useState(false);
 
   const handleBroadcast = async (alert) => {
     const success = await sendEmailAlert(alert);
     if (success) {
-      window.alert('Email broadcast sent successfully!');
+      addNotification({ title: 'Email Broadcast', message: 'Email broadcast sent successfully!', type: 'success' });
     } else {
-      window.alert('Failed to send email. Check console or your EmailJS config in .env.');
+      addNotification({ title: 'Email Broadcast Failed', message: 'Failed to send email. Check console or your EmailJS config in .env.', type: 'error' });
     }
   };
 

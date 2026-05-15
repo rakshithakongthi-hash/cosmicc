@@ -107,4 +107,13 @@ export function subscribeToAlerts(callback) {
     .subscribe();
 }
 
+/** Fetch active agencies for broadcast */
+export async function fetchActiveAgencies() {
+  const { data, error } = await supabase
+    .from('agencies')
+    .select('email')
+    .eq('is_active', true);
+  return { data, error };
+}
+
 export default supabase;

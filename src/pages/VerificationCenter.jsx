@@ -12,7 +12,7 @@ import useStore from '../store/useStore';
 import { getDisasterEmoji } from '../utils/helpers';
 
 export default function VerificationCenter() {
-  const { posts } = useStore();
+  const { posts, addNotification, addAlert } = useStore();
   const [inputText, setInputText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
@@ -44,9 +44,9 @@ export default function VerificationCenter() {
     if (!result || !result.is_disaster) return;
     const success = await sendEmailAlert(result);
     if (success) {
-      alert('Email broadcast sent successfully!');
+      addNotification({ title: 'Email Broadcast', message: 'Email broadcast sent successfully!', type: 'success' });
     } else {
-      alert('Failed to send email. Check console or your EmailJS config in .env.');
+      addNotification({ title: 'Email Broadcast Failed', message: 'Failed to send email. Check console or your EmailJS config in .env.', type: 'error' });
     }
   };
 
@@ -54,10 +54,33 @@ export default function VerificationCenter() {
     if (!result || !result.is_disaster) return;
     const success = await sendTelegramAlert(result);
     if (success) {
-      alert('Telegram broadcast sent successfully!');
+      addNotification({ title: 'Telegram Broadcast', message: 'Telegram broadcast sent successfully!', type: 'success' });
     } else {
-      alert('Failed to send Telegram alert. Check your Bot Token in .env.');
+      addNotification({ title: 'Telegram Broadcast Failed', message: 'Failed to send Telegram alert. Check your Bot Token in .env.', type: 'error' });
     }
+  };
+
+  const handleSaveAlert = () => {
+    if (!result || !result.is_disaster) return;
+    const newAlert = {
+      id: `alert-${Date.now()}`,
+      disaster_type: result.disaster_type,
+      location: result.location,
+      latitude: result.latitude || 20,
+      longitude: result.longitude || 0,
+      severity: result.severity,
+      urgency: result.urgency,
+      confidence: result.confidence,
+      credibility_score: result.verification?.credibility_score || result.confidence,
+      fake_probability: result.verification?.fake_probability || 0,
+      verification_status: 'Verified',
+      summary: result.summary,
+      recommended_action: result.recommended_action,
+      created_at: new Date().toISOString(),
+      source_count: 1
+    };
+    addAlert(newAlert);
+    addNotification({ title: 'Alert Saved', message: 'Alert added to the map successfully!', type: 'success' });
   };
 
   return (
@@ -259,6 +282,12 @@ export default function VerificationCenter() {
           {/* Broadcast Action */}
           {result.is_disaster && (
             <div className="mt-4 flex flex-wrap justify-end gap-3">
+              <button 
+                onClick={handleSaveAlert}
+                className="btn-glow flex items-center gap-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition-all"
+              >
+                <AlertCircle size={14} /> Add to Map
+              </button>
               <button 
                 onClick={handleTelegramBroadcast}
                 className="btn-glow flex items-center gap-2 text-sm bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl transition-all"

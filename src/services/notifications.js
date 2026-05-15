@@ -3,6 +3,7 @@
  * Handles browser push notifications and email alerts.
  */
 import emailjs from '@emailjs/browser';
+import { fetchActiveAgencies } from './supabase.js';
 
 
 /** Request browser notification permission */
@@ -43,12 +44,20 @@ export function notifyDisasterAlert(alert, sendEmail = false) {
   }
 }
 
-/** Send disaster alert email using EmailJS */
+/** Send disaster alert email using EmailJS (Broadcasts to all active agencies) */
 export async function sendEmailAlert(alert) {
   try {
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
+
+    // If in demo mode, simulate success to prevent error popups for the user
+    if (isDemo) {
+      console.log('DEMO MODE: Simulating email alert send.');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // simulate delay
+      return true;
+    }
 
     if (!serviceId || serviceId === 'your-emailjs-service-id') {
       console.warn('EmailJS not configured properly.');
@@ -64,8 +73,23 @@ export async function sendEmailAlert(alert) {
       confidence: alert.confidence ? Math.round(alert.confidence * 100) + '%' : 'N/A'
     };
 
-    const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
-    console.log('Email sent successfully!', response.status, response.text);
+    // Fetch active agencies to broadcast to
+    const { data: agencies, error } = await fetchActiveAgencies();
+    const emails = agencies ? agencies.map(a => a.email).filter(Boolean) : [];
+
+    if (emails.length > 0) {
+      // Broadcast to all agencies
+      const promises = emails.map(email => {
+        return emailjs.send(serviceId, templateId, { ...templateParams, to_email: email }, publicKey);
+      });
+      await Promise.allSettled(promises);
+      console.log(`Email broadcasted to ${emails.length} agencies.`);
+    } else {
+      // Fallback: Send to default recipient in template
+      const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      console.log('Email sent to default recipient.', response.status, response.text);
+    }
+
     return true;
   } catch (error) {
     console.error('Failed to send email alert:', error);

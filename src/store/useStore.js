@@ -4,6 +4,7 @@
  */
 import { create } from 'zustand';
 import { subscribeToAlerts, fetchAlerts } from '../services/supabase.js';
+import { notifyDisasterAlert } from '../services/notifications.js';
 
 // ====================================================================
 // Demo Data - Realistic disaster incidents for demonstration
@@ -186,6 +187,14 @@ const useStore = create((set, get) => ({
           if (eventType === 'INSERT') {
             if (!updatedAlerts.some(a => a.id === newAlert.id)) {
               updatedAlerts = [newAlert, ...updatedAlerts];
+              
+              // Trigger EmailJS and Browser Notifications
+              try {
+                notifyDisasterAlert(newAlert);
+              } catch (e) {
+                console.error('Notification error:', e);
+              }
+              
               get().addNotification({
                 title: 'New Alert Received',
                 message: `${newAlert.disaster_type} at ${newAlert.location}`,

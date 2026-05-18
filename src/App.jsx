@@ -13,6 +13,7 @@ import Alerts from './pages/Alerts';
 import VerificationCenter from './pages/VerificationCenter';
 import LiveMap from './pages/LiveMap';
 import Settings from './pages/Settings';
+import Auth from './pages/Auth';
 
 export default function App() {
   const { startLiveMonitoring, stopLiveMonitoring } = useStore();
@@ -28,9 +29,9 @@ export default function App() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1a1f2e',
-            border: '1px solid rgba(148,163,184,0.1)',
-            color: '#f1f5f9',
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.08)',
+            color: '#0f172a',
             fontSize: '13px',
           },
         }}
@@ -38,6 +39,7 @@ export default function App() {
         closeButton
       />
       <Routes>
+        <Route path="/auth" element={<Auth />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />

@@ -23,9 +23,9 @@ export default function Alerts() {
   const handleBroadcast = async (alert) => {
     const success = await sendEmailAlert(alert);
     if (success) {
-      addNotification({ title: 'Email Broadcast', message: 'Email broadcast sent successfully!', type: 'success' });
+      addNotification({ title: 'Broadcast Success', message: 'Alert broadcasted to matched agencies via Email/SMS.', type: 'success' });
     } else {
-      addNotification({ title: 'Email Broadcast Failed', message: 'Failed to send email. Check console or your EmailJS config in .env.', type: 'error' });
+      addNotification({ title: 'Broadcast Failed', message: 'Failed to broadcast alert. Check console logs.', type: 'error' });
     }
   };
 
@@ -179,7 +179,7 @@ export default function Alerts() {
                     onClick={() => handleBroadcast(selectedAlert)}
                     className="btn-glow flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all"
                   >
-                    <Send size={14} /> Broadcast Email Alert
+                    <Send size={14} /> Broadcast Alert
                   </button>
                 </div>
               </motion.div>

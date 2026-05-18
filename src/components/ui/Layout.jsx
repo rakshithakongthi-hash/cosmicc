@@ -11,7 +11,7 @@ export default function Layout() {
   const { sidebarOpen } = useStore();
 
   return (
-    <div className="min-h-screen bg-grid" style={{ background: '#0a0e1a' }}>
+    <div className="min-h-screen bg-grid">
       <Sidebar />
       <motion.div
         initial={false}

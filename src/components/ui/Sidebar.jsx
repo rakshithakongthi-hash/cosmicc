@@ -30,20 +30,20 @@ export default function Sidebar() {
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="fixed left-0 top-0 h-screen z-40 flex flex-col border-r"
       style={{
-        background: 'linear-gradient(180deg, #0f1629 0%, #0a0e1a 100%)',
-        borderColor: 'rgba(148, 163, 184, 0.08)',
+        background: 'linear-gradient(180deg, #020617 0%, #0B1220 100%)',
+        borderColor: 'rgba(148, 163, 184, 0.15)',
       }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b" style={{ borderColor: 'rgba(148,163,184,0.08)' }}>
+      <div className="flex items-center gap-3 px-4 h-16 border-b" style={{ borderColor: 'rgba(148, 163, 184, 0.15)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
+          style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 50%, #8B5CF6 100%)' }}>
           <Zap size={20} className="text-white" />
         </div>
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="overflow-hidden whitespace-nowrap">
-              <h1 className="text-sm font-bold text-white">DisasterSense</h1>
+              <h1 className="text-sm font-bold text-slate-900">DisasterSense</h1>
               <p className="text-[10px] text-slate-500">AI Detection Platform</p>
             </motion.div>
           )}
@@ -66,7 +66,7 @@ export default function Sidebar() {
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <motion.div layoutId="activeNav" className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))', border: '1px solid rgba(59,130,246,0.2)' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
+                  <motion.div layoutId="activeNav" className="absolute inset-0 rounded-xl" style={{ background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.3)' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
                 )}
                 <Icon size={18} className="relative z-10 flex-shrink-0" />
                 <AnimatePresence>
@@ -89,7 +89,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Status + Collapse */}
-      <div className="p-3 border-t" style={{ borderColor: 'rgba(148,163,184,0.08)' }}>
+      <div className="p-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
         {sidebarOpen && (
           <div className="mb-3 px-2 py-2 rounded-lg" style={{ background: 'rgba(34,197,94,0.08)' }}>
             <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        <button onClick={toggleSidebar} className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
+        <button onClick={toggleSidebar} className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
           {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>

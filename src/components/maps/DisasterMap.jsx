@@ -86,17 +86,17 @@ export default function DisasterMap({ height = '500px', alerts: propAlerts }) {
                   <div className="min-w-[200px]">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-lg">{getDisasterEmoji(alert.disaster_type)}</span>
-                      <span className="font-bold text-sm" style={{ color: '#f1f5f9' }}>{alert.disaster_type}</span>
+                      <span className="font-bold text-sm" style={{ color: '#f0fdf4' }}>{alert.disaster_type}</span>
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase" style={{ background: `${color}25`, color }}>{alert.severity}</span>
                     </div>
-                    <p className="text-xs mb-1" style={{ color: '#94a3b8' }}>{alert.location}</p>
+                    <p className="text-xs mb-1" style={{ color: '#a7f3d0' }}>{alert.location}</p>
                     {dangerZone && (
                       <p className="text-[10px] font-bold text-red-400 mb-1">⚠️ Predictive Spread Zone Active</p>
                     )}
-                    <p className="text-[11px] mb-2" style={{ color: '#64748b' }}>{alert.summary?.slice(0, 120)}...</p>
+                    <p className="text-[11px] mb-2" style={{ color: '#a7f3d0' }}>{alert.summary?.slice(0, 120)}...</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: '#64748b' }}>{timeAgo(alert.created_at)}</span>
-                      <span className="text-[10px] font-bold" style={{ color: alert.credibility_score >= 0.8 ? '#22c55e' : '#eab308' }}>
+                      <span className="text-[10px]" style={{ color: '#6b7280' }}>{timeAgo(alert.created_at)}</span>
+                      <span className="text-[10px] font-bold" style={{ color: alert.credibility_score >= 0.8 ? '#10b981' : '#eab308' }}>
                         {Math.round(alert.credibility_score * 100)}% credible
                       </span>
                     </div>

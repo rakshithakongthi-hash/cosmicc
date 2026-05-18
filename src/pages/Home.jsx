@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Zap, Shield, MapPin, Activity, ArrowRight, Globe,
-  Radio, Brain, BarChart3, AlertTriangle, CheckCircle2, Eye,
+  Radio, Brain, BarChart3, AlertTriangle, CheckCircle2, Eye, LogIn,
 } from 'lucide-react';
 import useStore from '../store/useStore';
 
@@ -48,22 +48,12 @@ export default function Home() {
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
             <span className="gradient-text">DisasterSense</span>{' '}
-            <span className="text-white">AI</span>
+            <span className="text-slate-900">AI</span>
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Real-time social media disaster detection, cross-verification, and emergency alert platform powered by AI
           </p>
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button onClick={() => navigate('/dashboard')}
-              className="btn-glow flex items-center gap-2 text-sm">
-              Open Dashboard <ArrowRight size={16} />
-            </button>
-            <button onClick={() => navigate('/map')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-colors"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(148,163,184,0.15)' }}>
-              <Globe size={16} /> Live Map
-            </button>
-          </div>
+
         </motion.div>
       </section>
 
@@ -87,8 +77,8 @@ export default function Home() {
       {/* Features Grid */}
       <section>
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-white">Intelligent Disaster Response</h2>
-          <p className="text-sm text-slate-500 mt-2">End-to-end pipeline from detection to verified emergency alerts</p>
+          <h2 className="text-2xl font-bold text-slate-900">Intelligent Disaster Response</h2>
+          <p className="text-sm text-slate-600 mt-2">End-to-end pipeline from detection to verified emergency alerts</p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f, i) => (
@@ -103,8 +93,8 @@ export default function Home() {
                 style={{ background: `${f.color}15`, border: `1px solid ${f.color}30` }}>
                 <f.icon size={20} style={{ color: f.color }} />
               </div>
-              <h3 className="text-sm font-semibold text-white mb-1">{f.title}</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">{f.desc}</p>
+              <h3 className="text-sm font-semibold text-slate-900 mb-1">{f.title}</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -117,7 +107,7 @@ export default function Home() {
         transition={{ duration: 0.5, delay: 0.5 }}
         className="glass-card p-8"
       >
-        <h2 className="text-xl font-bold text-white text-center mb-8">Detection Pipeline</h2>
+        <h2 className="text-xl font-bold text-slate-900 text-center mb-8">Detection Pipeline</h2>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {[
             { icon: Radio, label: 'Ingest', desc: 'Social media monitoring', color: '#3b82f6' },
@@ -132,8 +122,8 @@ export default function Home() {
                   style={{ background: `${step.color}15`, border: `1px solid ${step.color}25` }}>
                   <step.icon size={24} style={{ color: step.color }} />
                 </div>
-                <p className="text-xs font-semibold text-white">{step.label}</p>
-                <p className="text-[10px] text-slate-500 text-center">{step.desc}</p>
+                <p className="text-xs font-semibold text-slate-900">{step.label}</p>
+                <p className="text-[10px] text-slate-600 text-center">{step.desc}</p>
               </div>
               {i < 4 && <ArrowRight size={16} className="text-slate-600 hidden md:block" />}
             </div>

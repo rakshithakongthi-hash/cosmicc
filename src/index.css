@@ -5,48 +5,48 @@
    ==================================================================== */
 
 @theme {
-  /* Color Palette - Premium Monitoring Dark Mode (Optimal) */
-  --color-bg-primary: #09090b; /* Deep slate, almost black for low eye-strain */
-  --color-bg-secondary: #18181b; /* Slightly lighter for sidebars */
-  --color-bg-card: #121214; /* Deep rich surface for cards */
-  --color-bg-card-hover: #27272a;
-  --color-bg-glass: rgba(18, 18, 20, 0.75);
-  --color-bg-overlay: rgba(9, 9, 11, 0.85);
+  /* Color Palette - DisasterSense AI Premium Theme */
+  --color-bg-primary: #020617; /* Slate 950 */
+  --color-bg-secondary: #0B1220;
+  --color-bg-card: #0F172A; /* Slate 900 */
+  --color-bg-card-hover: #1E293B;
+  --color-bg-glass: rgba(15, 23, 42, 0.85);
+  --color-bg-overlay: rgba(2, 6, 23, 0.85);
 
   /* High-Tech Accents */
-  --color-accent-primary: #3b82f6; /* Electric Blue */
-  --color-accent-secondary: #8b5cf6; /* Vibrant Purple */
-  --color-accent-tertiary: #06b6d4; /* Cyan */
-  --color-accent-gradient-start: #3b82f6;
-  --color-accent-gradient-end: #06b6d4;
+  --color-accent-primary: #3B82F6; /* AI Blue */
+  --color-accent-secondary: #06B6D4; /* Intelligence Cyan */
+  --color-accent-tertiary: #8B5CF6; /* Innovation Purple */
+  --color-accent-gradient-start: #3B82F6;
+  --color-accent-gradient-end: #8B5CF6;
 
-  /* Vivid Severity Colors (Crucial for Disaster Apps) */
-  --color-severity-critical: #ef4444; /* Vivid Red */
-  --color-severity-high: #f97316; /* Vibrant Orange */
-  --color-severity-medium: #eab308; /* Bright Amber */
-  --color-severity-low: #10b981; /* Emerald Green */
+  /* Vivid Severity Colors */
+  --color-severity-critical: #DC2626;
+  --color-severity-danger: #EF4444;
+  --color-severity-high: #EF4444; /* Mapping high to danger */
+  --color-severity-medium: #F59E0B; /* Warning */
+  --color-severity-low: #10B981; /* Success */
 
   /* Status Colors */
-  --color-status-verified: #10b981;
-  --color-status-pending: #eab308;
-  --color-status-fake: #ef4444;
-  --color-status-review: #f97316;
+  --color-status-verified: #10B981;
+  --color-status-pending: #F59E0B;
+  --color-status-fake: #EF4444;
+  --color-status-review: #F59E0B;
 
   /* Crisp, High-Contrast Text */
-  --color-text-primary: #f8fafc; /* Near white for maximum readability */
-  --color-text-secondary: #94a3b8; /* Cool gray for secondary info */
-  --color-text-muted: #64748b; /* Muted gray */
-  --color-text-accent: #60a5fa; /* Soft bright blue */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #94A3B8;
+  --color-text-accent: #06B6D4;
 
   /* Subtle Borders */
-  --color-border-default: rgba(255, 255, 255, 0.08);
-  --color-border-active: rgba(59, 130, 246, 0.5);
+  --color-border-default: rgba(148, 163, 184, 0.15);
+  --color-border-active: rgba(56, 189, 248, 0.4);
 
-  /* Deep Neon Glow Shadows for Alerts */
+  /* Shadows */
   --shadow-glow-blue: 0 0 25px rgba(59, 130, 246, 0.25);
   --shadow-glow-purple: 0 0 25px rgba(139, 92, 246, 0.25);
   --shadow-glow-red: 0 0 30px rgba(239, 68, 68, 0.3);
-  --shadow-glow-green: 0 0 25px rgba(16, 185, 129, 0.25);
   --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
   --shadow-card-hover: 0 10px 30px -5px rgba(0, 0, 0, 0.7);
 
@@ -67,7 +67,7 @@ html {
 }
 
 body {
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, #020617 0%, #0F172A 100%);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -116,7 +116,7 @@ body {
 }
 
 .gradient-text-alert {
-  background: linear-gradient(135deg, #ef4444, #f97316);
+  background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -124,7 +124,7 @@ body {
 
 /* Glowing Button */
 .btn-glow {
-  background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
+  background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -238,7 +238,7 @@ body {
   border-radius: 12px;
 }
 .leaflet-tile-pane {
-  filter: brightness(0.8) contrast(1.1) saturate(0.9);
+  filter: none;
 }
 .leaflet-popup-content-wrapper {
   background: var(--color-bg-card) !important;

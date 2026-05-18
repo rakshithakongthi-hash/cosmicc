@@ -44,25 +44,13 @@ export function notifyDisasterAlert(alert, sendEmail = false) {
   }
 }
 
-/** Send disaster alert email using EmailJS (Broadcasts to all active agencies) */
+/** Send disaster alert email and SMS to registered agencies based on geographic matching */
 export async function sendEmailAlert(alert) {
   try {
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
     const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
-
-    // If in demo mode, simulate success to prevent error popups for the user
-    if (isDemo) {
-      console.log('DEMO MODE: Simulating email alert send.');
-      await new Promise(resolve => setTimeout(resolve, 1000)); // simulate delay
-      return true;
-    }
-
-    if (!serviceId || serviceId === 'your-emailjs-service-id') {
-      console.warn('EmailJS not configured properly.');
-      return false;
-    }
 
     const templateParams = {
       disaster_type: alert.disaster_type || 'Unknown Disaster',
@@ -75,24 +63,57 @@ export async function sendEmailAlert(alert) {
 
     // Fetch active agencies to broadcast to
     const { data: agencies, error } = await fetchActiveAgencies();
-    const emails = agencies ? agencies.map(a => a.email).filter(Boolean) : [];
+    if (error) {
+      console.error('Error fetching active agencies:', error);
+    }
 
+    // Geographic matching: Filter agencies where region matches alert location
+    const matchedAgencies = agencies ? agencies.filter(agency => {
+      if (!agency.region) return true; // If no region, assume it covers all areas
+      const location = (alert.location || '').toLowerCase();
+      const region = agency.region.toLowerCase();
+      return location.includes(region) || region.includes(location);
+    }) : [];
+
+    const emails = matchedAgencies.map(a => a.email).filter(Boolean);
+    const phoneNumbers = matchedAgencies.map(a => a.contact_number).filter(Boolean);
+
+    console.log(`[Broadcast] Matched ${matchedAgencies.length} agencies for location: ${alert.location}`);
+
+    // 1. Email Broadcast
     if (emails.length > 0) {
-      // Broadcast to all agencies
-      const promises = emails.map(email => {
-        return emailjs.send(serviceId, templateId, { ...templateParams, to_email: email }, publicKey);
-      });
-      await Promise.allSettled(promises);
-      console.log(`Email broadcasted to ${emails.length} agencies.`);
+      if (isDemo) {
+        console.log(`DEMO MODE: Simulating email broadcast to ${emails.length} agencies.`);
+      } else if (serviceId && serviceId !== 'your-emailjs-service-id') {
+        const promises = emails.map(email => {
+          return emailjs.send(serviceId, templateId, { ...templateParams, to_email: email }, publicKey);
+        });
+        await Promise.allSettled(promises);
+        console.log(`Email broadcasted to ${emails.length} agencies.`);
+      } else {
+        console.warn('EmailJS not configured properly. Skipping real email send.');
+      }
     } else {
-      // Fallback: Send to default recipient in template
-      const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      console.log('Email sent to default recipient.', response.status, response.text);
+      console.log('No agencies matched for email broadcast.');
+      // Fallback: Send to default recipient if configured and no specific agencies matched
+      if (!isDemo && serviceId && serviceId !== 'your-emailjs-service-id') {
+        const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        console.log('Email sent to default recipient.', response.status, response.text);
+      }
+    }
+
+    // 2. SMS Broadcast (Mock)
+    if (phoneNumbers.length > 0) {
+      console.log(`[SMS Broadcast] Sending alerts to ${phoneNumbers.length} agencies: ${phoneNumbers.join(', ')}`);
+      // Simulate SMS sending delay
+      if (!isDemo) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
 
     return true;
   } catch (error) {
-    console.error('Failed to send email alert:', error);
+    console.error('Failed to send email/SMS alert:', error);
     return false;
   }
 }

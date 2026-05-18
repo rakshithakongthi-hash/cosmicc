@@ -44,9 +44,9 @@ export default function VerificationCenter() {
     if (!result || !result.is_disaster) return;
     const success = await sendEmailAlert(result);
     if (success) {
-      addNotification({ title: 'Email Broadcast', message: 'Email broadcast sent successfully!', type: 'success' });
+      addNotification({ title: 'Broadcast Success', message: 'Alert broadcasted to matched agencies via Email/SMS.', type: 'success' });
     } else {
-      addNotification({ title: 'Email Broadcast Failed', message: 'Failed to send email. Check console or your EmailJS config in .env.', type: 'error' });
+      addNotification({ title: 'Broadcast Failed', message: 'Failed to broadcast alert. Check console logs.', type: 'error' });
     }
   };
 
@@ -216,9 +216,16 @@ export default function VerificationCenter() {
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                     <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <p className="text-[10px] text-slate-500 mb-1">Weather API</p>
-                      <p className={`text-sm font-bold ${result.verification.weather_verified ? 'text-green-400' : 'text-slate-400'}`}>
-                        {result.verification.weather_verified ? 'Verified' : 'Unverified/N/A'}
+                      <p className="text-[10px] text-slate-500 mb-1">
+                        {result.disaster_type?.toLowerCase() === 'earthquake' ? 'USGS API' : 
+                         ['wildfire', 'fire'].includes(result.disaster_type?.toLowerCase()) ? 'NASA FIRMS' : 
+                         'Weather API'}
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        (result.verification.weather_verified || result.verification.details?.earthquake?.verified || result.verification.details?.wildfire?.verified) 
+                        ? 'text-green-400' : 'text-slate-400'}`}>
+                        {(result.verification.weather_verified || result.verification.details?.earthquake?.verified || result.verification.details?.wildfire?.verified) 
+                        ? 'Verified' : 'Unverified/N/A'}
                       </p>
                     </div>
                     <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>

@@ -22,16 +22,16 @@ export default function LiveMap() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Live Disaster Map</h1>
-          <p className="text-sm text-slate-500 mt-1">Real-time geospatial overview of all incidents</p>
+          <p className="text-sm text-slate-600 mt-1">Real-time geospatial overview of all incidents</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {typeFilters.map(t => (
             <button key={t} onClick={() => setActiveType(t)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                activeType === t ? 'text-white' : 'text-slate-500 hover:text-slate-300')}
+                activeType === t ? 'text-white' : 'text-slate-600 hover:text-slate-900')}
               style={activeType === t
-                ? { background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.3)' }
-                : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(148,163,184,0.08)' }}>
+                ? { background: '#2563eb', border: '1px solid #2563eb' }
+                : { background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.08)' }}>
               {t}
             </button>
           ))}
@@ -61,7 +61,7 @@ export default function LiveMap() {
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ background: l.color, boxShadow: `0 0 8px ${l.color}60` }} />
-                  <span className="text-xs text-slate-400">{l.label} Severity</span>
+                  <span className="text-xs text-slate-600">{l.label} Severity</span>
                 </div>
               ))}
             </div>

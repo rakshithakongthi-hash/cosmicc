@@ -111,7 +111,7 @@ export function subscribeToAlerts(callback) {
 export async function fetchActiveAgencies() {
   const { data, error } = await supabase
     .from('agencies')
-    .select('email')
+    .select('email, region, contact_number')
     .eq('is_active', true);
   return { data, error };
 }
